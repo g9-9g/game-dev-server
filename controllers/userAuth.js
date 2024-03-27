@@ -6,10 +6,9 @@ const jwt = require("jsonwebtoken");
 //signing a user up
 //hashing users password before its saved to the database with bcrypt
 const signup = async (req, res) => {
-    console.log(req.body)
  try {
-   const { userName, email, password } = req.body;
-   const data = [userName, email, await bcrypt.hash(password, 10)]
+   const { username, email, password } = req.body;
+   const data = [username, email, await bcrypt.hash(password, 10)]
    
    //saving the user
    const db_res = await db.query(
@@ -17,8 +16,6 @@ const signup = async (req, res) => {
     INTO "users" (username, email, password)
     VALUES ($1, $2, $3)`, data)
 
-
-    console.log(db_res)
    //if user details is captured
    //generate token with the user's id and the secretKey in the env file
    // set cookie with the token generated
@@ -37,7 +34,7 @@ const signup = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
 
    //find a user by their email
    const db_res = await db.query(
@@ -56,13 +53,16 @@ const login = async (req, res) => {
       //generate token with the user's id and the secretKey in the env file
 
      if (isSame) {
-       let token = jwt.sign({ id: user.user_id }, process.env.secretKey, {
+       let token = jwt.sign( user, process.env.secretKey, {
          expiresIn: 1 * 24 * 60 * 60 * 1000,
        });
 
        //if password matches wit the one in the database
        //go ahead and generate a cookie for the user
        res.cookie("jwt", token, { maxAge: 1 * 24 * 60 * 60, httpOnly: true });
+       res.cookie("user", user, {
+        maxAge: 1 * 24 * 60 * 60, httpOnly: true
+       })
        console.log("user", JSON.stringify(user, null, 2));
        console.log(token);
        //send user data
@@ -78,7 +78,15 @@ const login = async (req, res) => {
  }
 };
 
+const signout = async (req, res, next) => {
+  res.clearCookie('jwt');
+  res.clearCookie('user');
+  return res.status(200).send("Sign out successfullly")
+}
+
+
 module.exports = {
  signup,
  login,
+ signout,
 };
