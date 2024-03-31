@@ -3,6 +3,8 @@
 /**
  * Module dependencies.
  */
+var Server = require("socket.io")
+var Socket = require("../controller/socket")
 
 var app = require('../app');
 var debug = require('debug')('game-server:server');
@@ -20,6 +22,9 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+var io = Server(server);
+
+io.on("connection", Socket.onConnection)
 
 /**
  * Listen on provided port, on all network interfaces.

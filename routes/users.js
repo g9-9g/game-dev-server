@@ -1,8 +1,8 @@
 var express = require('express');
 var router = express.Router();
 
-var middlewares = require('../middlewares/auth')
-var auth = require('../controllers/userAuth')
+var middlewares = require('../middlewares/auth.')
+var auth = require('../controller/auth.controller')
 
 router.get('/', middlewares.checkToken, (req,res,next) => {
   res.send('respond with a resource');
@@ -13,7 +13,7 @@ router.get('/', middlewares.checkToken, (req,res,next) => {
 //   res.send('respond with a resource');
 // });
 
-router.post('/signup', middlewares.checkUser, auth.signup)
+router.post('/signup', auth.signup)
 router.post('/login', auth.login)
 
 router.get('/signout', auth.signout)

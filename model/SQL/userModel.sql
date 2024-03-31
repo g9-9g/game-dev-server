@@ -1,8 +1,9 @@
-CREATE TABLE IF NOT EXISTS "users" (
-  "user_id" int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  "email" varchar,
-  "username" varchar,
-  "password" varchar
+CREATE TABLE "users" (
+  "user_id" SERIAL PRIMARY KEY,
+  "email" varchar UNIQUE,
+  "username" varchar UNIQUE,
+  "password" varchar,
+  "point" int DEFAULT 0,
+  "level" int DEFAULT 0,
+  "exp" int DEFAULT 0
 );
-
-INSERT INTO users(email, username, pwd) VALUES ('13', 'sdhawd', 'dsiauda');

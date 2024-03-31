@@ -15,7 +15,7 @@ const get_time = async () => {
     return await pool.query('SELECT NOW()')
 }
 
-const disconnect = async () => {``
+const disconnect = async () => {
   return await pool.end()
 }
 
