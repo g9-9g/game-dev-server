@@ -21,7 +21,26 @@ const checkToken = async (req, res, next) => {
     });
 }
 
+const checkSocketToken = async (socket, next) => {
+    const token = socket.handshake.headers.token || socket.handshake.query.token;
+    
+    if (!token) {
+        return next(new Error('Unauthorized'))
+    }
+    jwt.verify(token, process.env.secretKey, (err, decoded) => {
+        if (err) {
+            return next(new Error('Unauthorized'))
+        }
+        console.log(JSON.stringify(decoded.user))
+
+        socket.user = decoded.user
+        
+        next();
+    });
+}
+
 
 module.exports = {
     checkToken,
+    checkSocketToken
 }

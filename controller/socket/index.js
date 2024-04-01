@@ -2,53 +2,45 @@ const { Socket } = require("socket.io");
 const Player = require("../../model/game/Player");
 const jwt = require("jsonwebtoken");
 
+// Socket server run on a different port 
+var io = require('socket.io')(process.env.PORT || "1234");
 
-const disconnect = (event) => {
-    console.log("Disconnected")
-} 
 
 var players = {};
 var sockets = [];
 
-const onConnection = (socket) => {
+io.use(require("../../middlewares/auth.").checkSocketToken)
+
+io.on("connection", (socket) => {
+    const { username, user_id } = socket.user
     // Create player on connection
-    var player = new Player();
-
-
-    socket.use(async (packet, next) => {
-        const token = socket.handshake.headers.token || socket.handshake.query.token;
-        console.log(token)
-        try {
-            const decoded = await jwt.verify(token, process.env.secretKey)
-            console.log(decoded)
-            const { user_id , username, email } = decoded.user
-
-            // Set player
-            player.setPlayer(username, user_id);
-            players[user_id] = player // Assigned to players array
-
-
-            next()
-        } catch (error) {
-            next(new Error("lmao"))
-        }
-        
-    })
-
-    
+    var player = new Player(username, user_id);
+    players[user_id] = player
+    sockets[user_id] = socket
 
     // socket.emit()
 
+    // Tell the client the id
+    socket.emit('register', { 'user_id': user_id })
+    socket.emit('spawn', player)
+    socket.broadcast.emit('spawn', player) // Tell other 
+
+    //for (var playerId in player) //
+
     socket.on("Client-send", function(data) {
-            console.log("the user said:", data)
-            socket.emit("Server-send", data);
+        console.log("the user said:", data)
+        socket.emit("Server-send", data);
     });
 
 
-  socket.on("disconnect", disconnect)
-}
+    socket.on("disconnect", (socket) => {
+        console.log("disconnected");
+        delete socket
+        delete player
+    })
+})
 
 
 module.exports = {
-    onConnection
+    
 }

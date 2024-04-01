@@ -9,6 +9,7 @@ class Player {
         this.userName = userName;
         this.id = id;
     }
+    
 }
 
 module.exports = Player
