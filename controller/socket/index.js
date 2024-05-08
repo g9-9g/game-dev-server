@@ -1,5 +1,5 @@
 const { Socket } = require("socket.io");
-const Player = require("../../model/game/Player");
+const Player = require("../../model/Player");
 const jwt = require("jsonwebtoken");
 
 // Socket server run on a different port 
@@ -25,7 +25,11 @@ io.on("connection", (socket) => {
     socket.emit('spawn', player)
     socket.broadcast.emit('spawn', player) // Tell other 
 
-    //for (var playerId in player) //
+    for (var playerId in player) {
+        if (playerId != user_id) {
+            socket.emit('spawn', players[playerId])
+        }
+    }
 
     socket.on("Client-send", function(data) {
         console.log("the user said:", data)

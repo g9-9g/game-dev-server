@@ -1,4 +1,4 @@
-const Game = require("../../model/game.model")
+const Game = require("../../db/game.model")
 
 const getUserInfo = async (req, res, next) => {
     const user_id = req.params.id || req.body.user_id

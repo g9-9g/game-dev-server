@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
-const db = require("../model")
+const db = require("../db")
 
 router.post('/', async (req,res,next) => {
     console.log(sql)
@@ -17,6 +17,6 @@ router.post('/', async (req,res,next) => {
     }
     
 })
-/* GET home page. */
+
 
 module.exports = router;
