@@ -7,7 +7,11 @@ const signup = async (req, res) => {
     const { username, email, password } = req.body;
     const user = await Auth.createAccount( { username, email, password } );
 
-    return user
+    if (user) {
+      return login(req, res)
+    } else {
+      return res.status(409).json({ error : "Error signup" })
+    }
   } catch (error) {
     return res.status(409).json({ error : error })
   }

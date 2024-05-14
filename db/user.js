@@ -7,6 +7,7 @@ const createAccount = async ( {username, email , password } ) => {
         `INSERT 
         INTO "users" (username, email, password)
         VALUES ($1, $2, $3)`, data)
+    console.log(res);
     return (res.rowCount && res.rowCount > 0);
 }
 

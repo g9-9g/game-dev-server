@@ -3,7 +3,7 @@ const Player = require("../../model/Player");
 const jwt = require("jsonwebtoken");
 
 // Socket server run on a different port 
-var io = require('socket.io')(process.env.PORT || "1234");
+var io = require('socket.io')("1234");
 
 
 var players = {};
