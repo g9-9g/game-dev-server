@@ -42,7 +42,7 @@ const login = async (req, res) => {
       console.log("user", JSON.stringify(user, null, 2));
       console.log(token);
       
-      return res.status(201).send(token);
+      return res.status(201).send({"token": token});
 
 
     } else {

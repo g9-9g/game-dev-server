@@ -13,7 +13,7 @@ router.get('/', middlewares.checkToken, (req,res,next) => {
 //   res.send('respond with a resource');
 // });
 
-router.post('/signup', auth.signup)
+router.post('/register', auth.signup)
 router.post('/login', auth.login)
 
 router.get('/signout', auth.signout)
