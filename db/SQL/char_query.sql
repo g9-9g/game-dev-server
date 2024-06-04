@@ -102,3 +102,51 @@ JOIN skills as skill3 ON skill3.skill_id = skill3_id
 JOIN skills as skill4 ON skill4.skill_id = skill4_id
 JOIN weapons as wp ON wp.wp_id = weapon_id
 WHERE user_id = 1 AND character_id = 1;
+
+INSERT INTO user_char ()
+SELECT skill_id FROM skills 
+WHERE character_id = 1 
+ORDER BY (level_req) LIMIT 4;
+
+SELECT * FROM skills WHERE character_id = 1 ORDER BY (level_req);
+
+SELECT 
+    characters.character_id, 
+    COALESCE(characters_level, -1) as chars_level, 
+    character_class,
+    base_hp,
+    base_def,
+    base_atk,
+    multiplier,
+    weapon_id
+FROM characters LEFT JOIN
+( SELECT character_id, characters_level, weapon_id, skill1_id, skill2_id, skill3_id, skill4_id FROM user_char WHERE user_id = 2 ) as ownedChar ON ownedChar.character_id = characters.character_id
+JOIN skills ON skills.character_id = characters.character_id
+SELECT 
+    id as instance_id,
+    wp_id,
+    wp_name,
+    wp_class,
+    wp_req,
+    wp_level,
+    rarity,
+    base_hp,
+    base_def,
+    base_atk,
+    multiplier,
+    stunt_amount, 
+    stunt_duration, 
+    slow_amount, 
+    slow_duration, 
+    effect_req
+    FROM weapons JOIN 
+   (SELECT id, wp_id, wp_level, stunt_amount, stunt_duration, slow_amount, slow_duration, effect_req, wp_class, rarity
+   FROM user_weapon JOIN effect ON effect.object_id = wp_id WHERE user_id = $1) AS uw ON uw.wp_id = weapons.wp_id
+
+
+INSERT INTO skills (skill_id, character_id, skill_name, level_req)
+VALUES
+    (10, 1, 'Power Strike', 10),
+    (11, 1, 'War Cry', 15),
+    (12, 1, 'Defensive Stance', 20),
+    (13, 1, 'Berserk', 25);

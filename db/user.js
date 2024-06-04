@@ -32,6 +32,7 @@ const comparePwd = async (password, hash) => {
     return await bcrypt.compare(password, hash);
 }
 
+
 const getAllUserInfo = async (user_id) => {
     const sql = `
         SELECT 

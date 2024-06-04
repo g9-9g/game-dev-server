@@ -40,3 +40,18 @@ module.exports = {
     getAllWeapons
 
 }
+
+
+[{  
+    "stunt_amount" : 0,
+    "stunt_duration"  : 1,
+    "slow_amount"  : 2,
+    "slow_duration"  : 3,
+    "effect_req": 4,
+},{
+    "stunt_amount" : 10,
+    "stunt_duration"  : 11,
+    "slow_amount"  : 12,
+    "slow_duration"  : 13,
+    "effect_req": 14,
+}]

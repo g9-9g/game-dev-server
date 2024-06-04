@@ -1,5 +1,8 @@
 var express = require('express');
 var router = express.Router();
+const bodyParser = require('body-parser');
+
+router.use(bodyParser.json())
 
 /* GET home page. */
 // router.get('/', function(req, res, next) {
@@ -7,7 +10,10 @@ var router = express.Router();
 // });
 var middlewares = require('../middlewares/auth.')
 var Game = require("../controller/game/read.controller");
-const { getOwnedCharacters, searchCharName, filterChar } = require('../db/characters/read');
+const { getOwnedCharacters, searchCharName, filterChar, unlockCharacter, getAllCharAndSkillSet, createCharacter } = require('../db/characters.js');
+const { filterWeapon } = require('../db/weapons.js');
+const { createCharacters } = require('../db/admin.js');
+const { createSkill, insertEffects, getSkillSet } = require('../db/skills.js');
 
 router.use('/getUserInfo/:id', [middlewares.checkToken, Game.getUserInfo]);
 
@@ -23,8 +29,8 @@ router.use('/getCharacters/:id/', async (req,res,next) => {
 
 router.use('/characters/:id/search', async (req,res,next) => {
     const userId = req.params.id;
-    const query_name = req.query.name;
-    const sort_option = JSON.parse(req.query.sort_option);
+    const query_name = req.query.name || "";
+    const sort_option = JSON.parse(req.query.sort_option || "{}");
 
     console.log(query_name , sort_option);
 
@@ -35,12 +41,102 @@ router.use('/characters/:id/search', async (req,res,next) => {
 
 router.use('/characters/:id/filter', async (req,res,next) => {
     const userId = req.params.id;
-    const filter = JSON.parse(req.query.filter);
-    const sort_option = JSON.parse(req.query.sort_option);
+    const filter = JSON.parse(req.query.filter || "{}");
+    const sort_option = JSON.parse(req.query.sort_option || "{}");
 
     console.log(filter , sort_option);
 
     const result = await filterChar(userId, filter, sort_option);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.use('/weapons/:id/filter', async (req,res,next) => {
+    const user_id = req.params.id;
+    const filter = JSON.parse(req.query.filter || "{}");
+    const sort_option = JSON.parse(req.query.sort_option || "{}");
+    const query_name = req.query.name || "";
+
+    console.log(filter , sort_option);
+
+    const result = await filterWeapon(user_id,query_name, filter, sort_option);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.use('/admin/createCharacter', async (req,res,next) => {
+    const char = req.query;
+    console.log(char);
+
+    const result = await createCharacters(char);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.use ('/characters/:id/unlock/:char_id', async (req, res,next) => {
+    const userId = req.params.id
+    const charId = req.params.char_id
+    const result = await unlockCharacter(userId, charId);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.use ('/createSkill', async(req, res, next) => {
+    const {charID, skill_name, level_req } = req.query;
+    const result = await createSkill(charID, skill_name, level_req);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.use('/getSkillSet/:id', async (req,res,next) => {
+    const charID = req.params.id
+    const result = await getSkillSet(charID);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.post ('/insertEffects/:id', async (req,res,next) => {
+    const object_id = req.params.id;
+    const { effects }  = req.body;
+    console.log(effects)
+    const result = await insertEffects(object_id, effects);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+router.use ('/getAllCharAndSkillSet/:id', async (req,res,next) => {
+    const user_id = req.params.id;
+    const filter = JSON.parse(req.query.filter || "{}");
+    const sort_option = JSON.parse(req.query.sort_option || "{}");
+    const query_name = req.query.name || "";
+
+    const result = await getAllCharAndSkillSet(user_id,query_name, filter, sort_option);
+    console.log(result)
+    res.status(201).send({"result": result});
+})
+
+
+// INSERT character and min 4 skills
+/*
+{
+    "name",
+    "character_class",
+    "base_hp",
+    "base_def",
+    "base_atk",
+    "multiplier",
+    "skills": [
+        {
+            "skill_name":
+            "level_req":
+        }
+    ],
+}
+*/
+router.post('/createCharacter', async(req,res,next)=> {
+    const {character} =  req.body;
+    console.log(character)
+    const result = await createCharacter(character);
     console.log(result)
     res.status(201).send({"result": result});
 })
