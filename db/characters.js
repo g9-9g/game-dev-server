@@ -28,7 +28,7 @@ const searchCharName = async (user_id, query_name, sort_option) => {
     var sql_query = `SELECT 
         characters.character_id, 
         character_name,
-        COALESCE(characters_level, -1) as char_level, 
+        COALESCE(characters_level, -1) as character_level, 
         character_class,
         base_hp,
         base_def,
