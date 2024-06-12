@@ -43,24 +43,6 @@ const sortSQL = (sort_fields, sort_option) => {
   return sql;
 }
 
-const consolidate = (data, unique_fields, key) => {
-  const consolidatedData = {};
-
-  data.forEach(item => {
-      // Construct a unique key based on the specified unique fields
-      const uniqueKey = unique_fields.map(field => item[field]).join('_');
-
-      // If the key doesn't exist in the consolidated data, initialize it with an empty array
-      if (!consolidatedData[uniqueKey]) {
-          consolidatedData[uniqueKey] = [];
-      }
-
-      // Push the item into the array corresponding to the key
-      consolidatedData[uniqueKey].push(item);
-  });
-
-  return consolidatedData;
-};
 
 module.exports = { 
   get_time, 

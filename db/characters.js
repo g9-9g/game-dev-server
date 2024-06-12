@@ -4,6 +4,8 @@ const db = require("./index");
 const filter_fields = ["character_name", "character_class"];
 const sort_fields = ["character_name", "character_class", "characters_level"];
 
+const { Character } = require("../model/Game")
+
 const consolidateChars = (characters) => {
     const charactersMap = new Map();
     characters.forEach(character => {
@@ -158,9 +160,12 @@ const getAllCharAndSkillSet = async (user_id, query_name, filter, sort_option) =
     console.log(sql_query);
     console.log(params_arr);
 
+    
+
     var res = await db.query(sql_query, params_arr);
     if (res) {
-        return consolidateChars(res.rows);
+        console.log(Character.consolidate(res.rows));
+        return Character.consolidate(res.rows);
     } else {
         throw new Error("No character found!");
     }
