@@ -1,30 +1,6 @@
 const db = require("./index");
 
-
-const filter_fields = ["character_name", "character_class"];
-const sort_fields = ["character_name", "character_class", "characters_level"];
-
-const { Character } = require("../model/Game")
-
-const consolidateChars = (characters) => {
-    const charactersMap = new Map();
-    characters.forEach(character => {
-        const { character_id, character_name, chars_level, character_class, base_hp, base_def, base_atk, multiplier, weapon_id, skill_id, skill_name, level_req, selected_skill } = character;
-        if (!charactersMap.has(character_id)) {
-            charactersMap.set(character_id, {
-                character_id, character_name, chars_level, character_class, base_hp, base_def, base_atk, multiplier, weapon_id,
-                skills: []
-            });
-        }
-        if (chars_level >= 0) {
-            const charactersEntry = charactersMap.get(character_id);
-            charactersEntry.skills.push({
-                skill_id, skill_name, level_req, selected_skill
-            });
-        }
-    });
-    return Array.from(charactersMap.values());
-}
+const { Character, Skill } = require("../model/Game")
 
 const searchCharName = async (user_id, query_name, sort_option) => {
     var sql_query = `SELECT 
@@ -46,7 +22,7 @@ const searchCharName = async (user_id, query_name, sort_option) => {
     ON ownedChar.character_id = characters.character_id
     WHERE character_name ILIKE $2`;
     params_arr = [user_id, `${query_name}%`];
-    sql_query += db.sortSQL(sort_fields, sort_option);
+    sql_query += db.sortSQL(Character.sortOPT(sort_option), sort_option);
 
     // console.log(sql_query)
 
@@ -80,7 +56,7 @@ const filterChar = async (user_id, filter, sort_option) => {
     var params_arr = [user_id];
 
     var cnt = 0;
-    var filterKey = Object.keys(filter).filter((key) => (filter_fields.includes(key)))
+    var filterKey = Character.filterOPT(filter)
     for (var i = 0;i < filterKey.length;i++) {
         var key = filterKey[i];
         if (filter[key] && Array.isArray(filter[key]) && filter[key] != 0) {
@@ -94,7 +70,7 @@ const filterChar = async (user_id, filter, sort_option) => {
         }
     }
 
-    sql_query += db.sortSQL(sort_fields, sort_option);
+    sql_query += db.sortSQL(Character.sortOPT(sort_option), sort_option);
 
     console.log(sql_query);
     console.log(params_arr);
@@ -112,7 +88,7 @@ const getAllCharAndSkillSet = async (user_id, query_name, filter, sort_option) =
         SELECT
             characters.character_id, 
             character_name,
-            COALESCE(characters_level, -1) as chars_level, 
+            COALESCE(characters_level, -1) as character_level, 
             character_class,
             base_hp,
             base_def,
@@ -141,7 +117,7 @@ const getAllCharAndSkillSet = async (user_id, query_name, filter, sort_option) =
     params_arr = [user_id, `${query_name}%`]
 
     var cnt = 0;
-    var filterKey = Object.keys(filter).filter((key) => (filter_fields.includes(key)))
+    var filterKey = Character.filterOPT(filter)
     for (var i = 0;i < filterKey.length;i++) {
         var key = filterKey[i];
         if (filter[key] && Array.isArray(filter[key]) && filter[key] != 0) {
@@ -155,7 +131,7 @@ const getAllCharAndSkillSet = async (user_id, query_name, filter, sort_option) =
         }
     }
 
-    sql_query += db.sortSQL(sort_fields, sort_option);
+    sql_query += db.sortSQL(Character.sortOPT(sort_option), sort_option);
 
     console.log(sql_query);
     console.log(params_arr);
@@ -164,15 +140,12 @@ const getAllCharAndSkillSet = async (user_id, query_name, filter, sort_option) =
 
     var res = await db.query(sql_query, params_arr);
     if (res) {
-        console.log(Character.consolidate(res.rows));
         return Character.consolidate(res.rows);
     } else {
         throw new Error("No character found!");
     }
 }
 
-
-// Sample function
 const getOwnedCharacters = async (user_id, query, sort_option) => {
     var sql_query = `
     SELECT *
@@ -182,7 +155,7 @@ const getOwnedCharacters = async (user_id, query, sort_option) => {
     var params_arr = [user_id];
 
     // Filter
-    var filterKey = Object.keys(query).filter((key) => (filter_fields.includes(key)))
+    var filterKey = Character.filterOPT(query)
     for (var i = 0;i < filterKey.length;i++) {
         var key = filterKey[i];
         if (query[key]) {
@@ -194,7 +167,7 @@ const getOwnedCharacters = async (user_id, query, sort_option) => {
     console.log(params_arr);
 
     // Sort
-    var sortKey = Object.keys(sort_option).filter((key) => (sort_fields.includes(key)))
+    var sortKey = Character.sortOPT(sort_option)
     var cnt = 0;
     for (var i = 0;i < sortKey.length;i++) {
         var key = sortKey[i];
@@ -230,14 +203,13 @@ const unlockCharacter = async (user_id, char_id) => {
 
 
 const updateStateCharacter = async (user_id, char_id, new_state) => {
-    const allow_update_fields = []
     var sql_query = `
         UPDATE user_char
         SET
     `;
     var params_arr = [char_id, user_id];
 
-    Object.keys(new_state).filter((key) => (allow_update_fields.includes(key))).forEach((key) => {
+    Character.updateStateKey(new_state).forEach((key) => {
         if (new_state[key] != null) {
             sql_query += ' ' + key + ' = ' + '$' +  (params_arr.length + 1);
             params_arr.push(new_state[key]);
@@ -261,15 +233,13 @@ const updateStateCharacter = async (user_id, char_id, new_state) => {
 }
 
 const createCharacter = async (character) => {
-    const { name, character_class, base_hp, base_atk, base_def, multiplier } = character
+    const { character_name, character_class, base_hp, base_atk, base_def, multiplier } = new Character(character)
 
     var res = await db.query(`INSERT INTO characters(character_name, character_class, base_hp, base_def, base_atk, multiplier)
         VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING character_id, character_name AS name, character_class, base_hp, base_def, multiplier`,  [name, character_class, base_hp, base_atk, base_def, multiplier]);
+        RETURNING character_id, character_name, character_class, base_hp, base_def, multiplier`,  [character_name, character_class, base_hp, base_atk, base_def, multiplier]);
     if (res) {
-        var result = res.rows[0];
-        result.skills = [];    
-        // console.log(result)
+        var result = new Character(res.rows[0]);
 
         var character_id = res.rows[0].character_id;
         var sql_query = `INSERT INTO skills (character_id, skill_name, level_req)
@@ -281,9 +251,10 @@ const createCharacter = async (character) => {
             params_arr.push(skill.level_req || 0);
         })
         sql_query += ` RETURNING skill_id, skill_name, level_req`
+
         var res2 = await db.query(sql_query, params_arr);
         if (res2) {
-            res2.rows.forEach((skill) => result.skills.push(skill));
+            res2.rows.forEach((skill) => result.skills.push(new Skill(skill)));
             return result;
         } else {
             throw new Error("No character found!");
@@ -327,7 +298,6 @@ const createCharacterv2 = async (character) => {
 }
 
 const updateCharacter = async (character_id, new_character) => {
-    const allow_update_fields = []
     var sql_query = `
         UPDATE characters
         SET

@@ -80,3 +80,66 @@ CREATE TRIGGER check_valid_update_trigger
 BEFORE UPDATE ON user_char
 FOR EACH ROW
 EXECUTE FUNCTION check_valid_update();
+
+
+-- Trigger to check max friends (200 per user)
+CREATE OR REPLACE FUNCTION check_friend_request()
+RETURNS TRIGGER AS $$
+DECLARE
+    cnt INTEGER;
+BEGIN
+    SELECT COUNT(users.user_id) FROM users WHERE friend_status(NEW.user_id, users.user_id) = 1
+    INTO cnt;
+    
+    IF (cnt+1 > 50) THEN
+        RAISE EXCEPTION 'NUMBER OF REQUEST EXCEEDED';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_friend_request_trigger
+BEFORE INSERT ON friends
+FOR EACH ROW
+EXECUTE FUNCTION check_friend_request();
+
+-- Trigger to check max friend requests and max friends (200)
+CREATE OR REPLACE FUNCTION check_friend_request()
+RETURNS TRIGGER AS $$
+DECLARE
+    cnt_req INTEGER;
+    cnt_friends INTEGER;
+    del_item INTEGER;
+BEGIN
+    IF (NEW.user_id = NEW.friend_id) THEN
+        RAISE EXCEPTION 'user_id and friend_id must be different';
+    END IF;
+
+    SELECT COUNT(users.user_id) FROM users WHERE friend_status(NEW.user_id, users.user_id) = 1
+    INTO cnt_req;
+
+    -- Delete oldest request if request length > 50
+    IF (cnt_req+1 > 50) THEN
+        SELECT friend_id FROM friends WHERE user_id = NEW.user_id AND friend_id IN (
+            SELECT users.user_id FROM users WHERE friend_status(NEW.user_id, users.user_id) = 1
+        ) ORDER BY (created_at) LIMIT 1 INTO del_item;
+        DELETE FROM friends
+        WHERE user_id = NEW.user_id AND friend_id = del_item;
+    END IF;
+
+    SELECT COUNT(users.user_id) FROM users WHERE friend_status(users.user_id, NEW.user_id) = 2
+    INTO cnt_friends;
+
+    IF (cnt_friends+1 > 200) THEN
+        RAISE EXCEPTION 'NUMBER OF FRIENDS EXCEEDED';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER check_friend_request_trigger
+BEFORE INSERT ON friends
+FOR EACH ROW
+EXECUTE FUNCTION check_friend_request();

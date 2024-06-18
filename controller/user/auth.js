@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const Auth = require("../db/user")
+const Auth = require("../../db/user")
 
 
 const signup = async (req, res) => {
@@ -42,7 +42,12 @@ const login = async (req, res) => {
       console.log("user", JSON.stringify(user, null, 2));
       console.log(token);
       
-      return res.status(201).send({"token": token});
+      return res.status(201).send({
+        "userName": user.username,
+        "token": token,
+        "email": user.email,
+        "user_id": user.user_id
+      });
 
 
     } else {

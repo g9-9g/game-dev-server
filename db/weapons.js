@@ -1,56 +1,5 @@
 const db = require("./index");
-
-
-const filter_fields = ["wp_class"]
-const sort_fields = ["wp_name", "wq_level", "base_atk"]
-
-const consolidateWeapons = (weapons) => {
-    const weaponMap = new Map();
-    weapons.forEach(weapon => {
-        const { instance_id,
-            wp_id,
-            wp_name,
-            wp_class,
-            wp_req,
-            wp_level,
-            rarity,
-            base_hp,
-            base_def,
-            base_atk,
-            multiplier,
-            effect_id,
-            stunt_amount,
-            stunt_duration,
-            slow_amount,
-            slow_duration,
-            effect_req } = weapon;
-        if (!weaponMap.has(instance_id)) {
-            weaponMap.set(instance_id, {
-                wp_id,
-                wp_name,
-                wp_class,
-                wp_req,
-                wp_level,
-                rarity,
-                base_hp,
-                base_def,
-                base_atk,
-                multiplier,
-                effects: []
-            });
-        }
-        const weaponEntry = weaponMap.get(instance_id);
-        weaponEntry.effects.push({
-            effect_id,
-            stunt_amount,
-            stunt_duration,
-            slow_amount,
-            slow_duration,
-            effect_req
-        });
-    });
-    return Array.from(weaponMap.values());
-}
+const { Weapon } = require("../model/Game")
 
 const filterWeapon = async (user_id, query_name, filter, sort_option) => {
     var sql_query = `SELECT 
@@ -77,7 +26,7 @@ const filterWeapon = async (user_id, query_name, filter, sort_option) => {
    WHERE wp_name ILIKE $2`;
     params_arr = [user_id, `${query_name}%`];
 
-    var filterKey = Object.keys(filter).filter((key) => (filter_fields.includes(key)))
+    var filterKey = Weapon.filterOPT(filter);
     for (var i = 0;i < filterKey.length;i++) {
         var key = filterKey[i];
         if (filter[key] && Array.isArray(filter[key]) && filter[key] != 0) {
@@ -91,13 +40,13 @@ const filterWeapon = async (user_id, query_name, filter, sort_option) => {
         }
     }
 
-    sql_query += db.sortSQL(sort_fields, sort_option);
+    sql_query += db.sortSQL(Weapon.sortOPT(sort_option), sort_option);
 
     console.log(sql_query)
 
     var res = await db.query(sql_query, params_arr);
     if (res) {
-        return consolidateWeapons(res.rows);
+        return Weapon.consolidate(res.rows);
     } else {
         throw new Error("Error");
     }
