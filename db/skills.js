@@ -1,31 +1,6 @@
 const db = require("./index");
+const { Skill,Effect } = require("../model/Game")
 
-const consolidateSkills = (skills) => {
-    const skillMap = new Map();
-    skills.forEach(skill => {
-        const { skill_id, character_id, skill_name, level_req, effect_id, object_id, stunt_amount, stunt_duration, slow_amount, slow_duration, effect_req } = skill;
-        if (!skillMap.has(skill_id)) {
-            skillMap.set(skill_id, {
-                skill_id,
-                character_id,
-                skill_name,
-                level_req,
-                effects: []
-            });
-        }
-        const skillEntry = skillMap.get(skill_id);
-        skillEntry.effects.push({
-            effect_id,
-            object_id,
-            stunt_amount,
-            stunt_duration,
-            slow_amount,
-            slow_duration,
-            effect_req
-        });
-    });
-    return Array.from(skillMap.values());
-}
 
 const getSkillSet = async (character_id) => {
     var sql_query = `
@@ -37,7 +12,7 @@ const getSkillSet = async (character_id) => {
 
     var res = await db.query(sql_query, params_arr);
     if (res) {
-        return consolidateSkills(res.rows);
+        return Skill.consolidate(res.rows);
     } else {
         throw new Error("Error");
     }
@@ -114,7 +89,7 @@ const modifySkill = async (skill_id, skill_name, level_req) => {
 
     var res = await db.query(sql_query, params_arr);
     if (res) {
-        return skill_id;s
+        return skill_id;
     } else {
         throw new Error("Error");
     }  

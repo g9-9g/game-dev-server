@@ -9,13 +9,12 @@ router.use(bodyParser.json())
 //   res.render('index', { title: 'Express' });
 // });
 var middlewares = require('../middlewares/auth.')
-var Game = require("../controller/game/read.controller");
+
 const { getOwnedCharacters, searchCharName, filterChar, unlockCharacter, getAllCharAndSkillSet, createCharacter } = require('../db/characters.js');
 const { filterWeapon } = require('../db/weapons.js');
 const { createCharacters } = require('../db/admin.js');
 const { createSkill, insertEffects, getSkillSet } = require('../db/skills.js');
 
-router.use('/getUserInfo/:id', [middlewares.checkToken, Game.getUserInfo]);
 
 router.use('/getCharacters/:id/', async (req,res,next) => {
     const userId = req.params.id
@@ -116,23 +115,6 @@ router.use ('/getAllCharAndSkillSet/:id', async (req,res,next) => {
 })
 
 
-// INSERT character and min 4 skills
-/*
-{
-    "name",
-    "character_class",
-    "base_hp",
-    "base_def",
-    "base_atk",
-    "multiplier",
-    "skills": [
-        {
-            "skill_name":
-            "level_req":
-        }
-    ],
-}
-*/
 router.post('/createCharacter', async(req,res,next)=> {
     const {character} =  req.body;
     console.log(character)
@@ -140,5 +122,9 @@ router.post('/createCharacter', async(req,res,next)=> {
     console.log(result)
     res.status(201).send({"result": result});
 })
+
+router.use('/characters', require('./character.js'))
+router.use('/weapons', require('./weapons.js'))
+
 
 module.exports = router;
